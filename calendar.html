@@ -3,15 +3,62 @@
   <head>
     <meta charset='utf-8' />
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'></script>
+    <style>
+    #calendar {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    </style>
     <script>
-
+      let calendar;
       document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-          initialView: 'dayGridMonth'
+        calendar = new FullCalendar.Calendar(calendarEl, {
+
+          initialView: 'dayGridMonth',
+
+          events: JSON.parse(localStorage.getItem('events')) || [], //load saved events from local storage
+
+          dateClick: function(info) { // when a date is clicked, we can set the schedule for that day.
+            /*setting the event */
+            let title = prompt('Enter Event Title: ');
+            if (title) {
+              calendar.addEvent({
+                title: title,
+                start: info.dateStr,
+                allDay: true
+              });
+            };
+            saveEvents(); //save feature.
+          },
+          /*modify or delete the event */
+          eventClick: function(info) {
+            let action = confirm('confirm OK to delete, Cancel to modify');
+            if (action) {
+              info.event.remove();
+              saveEvents(); //save feature.
+            } else {
+              let newTitle = prompt('new title:', info.event.title);
+              if (newTitle) {
+                info.event.setProp('title', newTitle);
+                saveEvents(); //save feature.
+              }
+            }
+          }
+
         });
         calendar.render();
       });
+
+      function saveEvents() {
+        let events = calendar.getEvents().map(e => ({
+          title: e.title,
+          start: e.startStr,
+          allDay: e.allDay
+        }));
+        localStorage.setItem('events', JSON.stringify(events));
+      }
 
     </script>
   </head>
